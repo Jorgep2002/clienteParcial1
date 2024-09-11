@@ -3,6 +3,7 @@ package org.example.views;
 
 import org.example.cliente.FileClient;
 import org.example.cliente.UserClient;
+import org.example.shared.entities.UserEntity;
 
 import javax.swing.*;
 import java.awt.*;
@@ -75,20 +76,25 @@ public class LoginFrame extends JFrame {
         String username = usernameField.getText();
         String password = new String(passwordField.getPassword());
 
+        UserEntity user = new UserEntity(
+                username,
+                password
+        );
+
         try {
-            boolean login =  client.login(username, password);
-            System.out.println(username + " , " +password);
+            boolean login =  client.login(user);
+            System.out.println(user.getId() + user.getPassword());
             System.out.println("login = " + login);
             if (login) {
                 JOptionPane.showMessageDialog(this, "Login successful!");
 
 
-                if(username.equals("admin")){
+                if(user.getId().equals("admin")){
                 AdminView  adminFrame = new AdminView(client,fileClient);
                     adminFrame.setVisible(true);
-                }else if(!username.equals("admin")){
+                }else if(!user.getId().equals("admin")){
                 UserView  userFrame = new UserView(fileClient);
-                    userFrame.setVisible(false);
+                    userFrame.setVisible(true);
                 }
 
 

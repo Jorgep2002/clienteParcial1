@@ -3,6 +3,9 @@ package org.example.views;
 import org.example.cliente.FileClient;
 import org.example.cliente.UserClient;
 import org.example.shared.entities.GroupEntity;
+import org.example.shared.entities.UserEntity;
+
+import java.util.List;
 
 import javax.swing.*;
 import javax.swing.tree.DefaultMutableTreeNode;
@@ -18,6 +21,10 @@ public class AdminView extends JFrame {
     private JMenuBar menuBar;
     private JTextField searchBar;
     private JTree directoryTree;
+    private JPanel mainPanel; // Panel principal
+    private JPanel rightPanel; // Panel derecho donde mostraremos los grupos
+
+
     private FileClient fileClient;
     private UserClient userClient;
 
@@ -39,8 +46,13 @@ public class AdminView extends JFrame {
         //Menú de grupos
         JMenu groupMenu = new JMenu("Grupos");
         //Btn para crear grupos
-        JMenuItem createGroupMenuItem = new JMenuItem("Crear Grupo");
-        groupMenu.add(createGroupMenuItem);
+        JMenuItem createGroupsMenuItem = new JMenuItem("Crear Grupo");
+        groupMenu.add(createGroupsMenuItem);
+
+        ///----VER GRUPOS BOTON
+        JMenuItem watchGroupsMetuItems = new JMenuItem("Ver Grupo");
+        groupMenu.add(watchGroupsMetuItems);
+
 
         //Añadir botones al menú
         menuBar.add(fileMenu);
@@ -76,9 +88,18 @@ public class AdminView extends JFrame {
         directoryTree = new JTree(root);
         JScrollPane treeScrollPane = new JScrollPane(directoryTree);
 
+        // Panel derecho donde se mostrarán los grupos y miembros
+        rightPanel = new JPanel();
+        rightPanel.setLayout(new BoxLayout(rightPanel, BoxLayout.Y_AXIS));
+        JScrollPane rightScrollPane = new JScrollPane(rightPanel);
+
+        //Agregar los paneles a la vista
         mainPanel.add(searchPanel, BorderLayout.NORTH);
         mainPanel.add(treeScrollPane, BorderLayout.WEST);
+        mainPanel.add(rightScrollPane, BorderLayout.CENTER);
+
         this.add(mainPanel);
+
 
         // Añadir listener para subir archivos
         uploadMenuItem.addActionListener(new ActionListener() {
@@ -104,7 +125,7 @@ public class AdminView extends JFrame {
         //Crear grupos
 
         // Añadir listener para crear grupos
-        createGroupMenuItem.addActionListener(new ActionListener() {
+        createGroupsMenuItem.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 openCreateGroupDialog();
@@ -112,6 +133,88 @@ public class AdminView extends JFrame {
         });
 
         this.setVisible(true);
+
+        watchGroupsMetuItems.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                loadGroups();
+            }
+        });
+
+    }
+    //Función para mostrar los grupos
+    private void loadGroups() {
+        rightPanel.removeAll(); // Limpiar el panel derecho
+
+        List<GroupEntity> groups = userClient.getAllGroups(); // Obtener todos los grupos
+        for (GroupEntity group : groups) {
+            JPanel groupPanel = new JPanel();
+            groupPanel.setLayout(new BoxLayout(groupPanel, BoxLayout.Y_AXIS));
+            System.out.println(group.getId());
+            groupPanel.setBorder(BorderFactory.createTitledBorder(group.getName()));
+
+            JLabel groupDescLabel = new JLabel("Descripción: " + group.getDescription());
+            JButton viewMembersButton = new JButton("Ver Miembros");
+
+            // Añadir funcionalidad para ver y gestionar miembros
+            viewMembersButton.addActionListener(e -> openMembersDialog(group));
+
+            groupPanel.add(groupDescLabel);
+            groupPanel.add(viewMembersButton);
+            rightPanel.add(groupPanel);
+        }
+
+        rightPanel.revalidate();
+        rightPanel.repaint();
+    }
+    //Vista usuarios
+    private void openMembersDialog(GroupEntity group) {
+        System.out.println(group);
+        JDialog membersDialog = new JDialog(this, "Miembros de " + group.getName(), true);
+        membersDialog.setLayout(new BorderLayout());
+
+        JPanel membersPanel = new JPanel();
+        membersPanel.setLayout(new BoxLayout(membersPanel, BoxLayout.Y_AXIS));
+
+//         Obtener miembros del grupo (supongo que tienes una función en UserClient para esto)
+        List<UserEntity> members = userClient.getUsersByGroupId(group.getId());
+        System.out.println(members);
+
+        for (UserEntity member : members) {
+            JPanel memberPanel = new JPanel();
+            memberPanel.setLayout(new BorderLayout());
+
+            JLabel memberLabel = new JLabel(member.getId());
+            JButton removeButton = new JButton("Eliminar");
+
+            // Añadir listener para eliminar miembro
+//            removeButton.addActionListener(e -> {
+//                userClient.removeMember(group.getId(), member);
+//                membersDialog.dispose();
+//                openMembersDialog(group); // Recargar la lista de miembros
+//            });
+
+            memberPanel.add(memberLabel, BorderLayout.CENTER);
+            memberPanel.add(removeButton, BorderLayout.EAST);
+            membersPanel.add(memberPanel);
+        }
+
+        JButton addButton = new JButton("Agregar Miembro");
+        addButton.addActionListener(e -> {
+            String newMember = JOptionPane.showInputDialog(membersDialog, "Ingrese el nombre del nuevo miembro:");
+            if (newMember != null && !newMember.trim().isEmpty()) {
+                userClient.addUserToGroup(group.getId(), newMember);
+                membersDialog.dispose();
+                openMembersDialog(group); // Recargar la lista de miembros
+            }
+        });
+
+        membersDialog.add(new JScrollPane(membersPanel), BorderLayout.CENTER);
+        membersDialog.add(addButton, BorderLayout.SOUTH);
+
+        membersDialog.setSize(300, 400);
+        membersDialog.setLocationRelativeTo(this);
+        membersDialog.setVisible(true);
     }
 
 
