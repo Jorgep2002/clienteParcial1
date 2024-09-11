@@ -83,8 +83,13 @@ public class LoginFrame extends JFrame {
                 JOptionPane.showMessageDialog(this, "Login successful!");
 
 
+                if(username.equals("admin")){
+                AdminView  adminFrame = new AdminView(client,fileClient);
+                    adminFrame.setVisible(true);
+                }else if(!username.equals("admin")){
                 UserView  userFrame = new UserView(fileClient);
-                userFrame.setVisible(true);
+                    userFrame.setVisible(false);
+                }
 
 
                 this.dispose();

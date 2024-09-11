@@ -11,7 +11,7 @@ public class Main {
 
 
         // Instancia los clientes para ambos servicios
-        UserClient userClient = new UserClient("localhost", "6803", "authService");
+        UserClient userClient = new UserClient("localhost", "6803", "AuthService");
         FileClient fileClient = new FileClient("localhost", "6802", "fileService");
 
 
