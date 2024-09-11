@@ -42,7 +42,14 @@ public class UserClient {
 
     }
 
-
+    public List<GroupEntity> getGroupsByUserId(String userId){
+        try{
+            return serviceClient.getGroupsByUserId(userId);
+        }catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
 
 
     public boolean login(UserEntity user) {
@@ -63,4 +70,20 @@ public class UserClient {
     }
 
 
+    public List<UserEntity> getAllUsers() {
+        try{
+            return serviceClient.getAllUsers();
+        }catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+    public boolean createUser(UserEntity user) {
+        try{
+            return serviceClient.createUser(user);
+        }catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
 }

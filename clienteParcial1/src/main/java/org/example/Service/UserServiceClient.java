@@ -43,5 +43,14 @@ public class UserServiceClient {
         return service.addUserToGroup(groudId, userId);
     }
 
+    public List<UserEntity> getAllUsers() throws RemoteException {
+        return service.getAllUsers();
+    }
+    public List<GroupEntity> getGroupsByUserId(String userId) throws RemoteException{
+        return service.getGroupsByUserId(userId);
+    }
+    public boolean createUser(UserEntity user) throws RemoteException{
+        return service.createUser(user);
+    }
 
 }
