@@ -2,6 +2,7 @@ package org.example.cliente;
 
 import org.example.Service.FileServiceClient;
 import org.example.Service.UserServiceClient;
+import org.example.shared.entities.DirectorioEntity;
 import org.example.shared.entities.UserEntity;
 
 import java.io.IOException;
@@ -22,9 +23,17 @@ public class FileClient {
     }
 
 
-    public List<String> getFilesByUser(String userId) {
+    public List<DirectorioEntity> getFilesByUser(String userId) {
         try{
             return serviceClient.getFilesByUser(userId);
+        }catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+    public List<DirectorioEntity> getUserFiles(String userId) {
+        try{
+            return serviceClient.getUsersFiles(userId);
         }catch (Exception e) {
             e.printStackTrace();
             return null;

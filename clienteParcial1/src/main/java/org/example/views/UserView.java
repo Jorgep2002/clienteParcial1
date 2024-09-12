@@ -1,6 +1,7 @@
 package org.example.views;
 
 import org.example.cliente.FileClient;
+import org.example.shared.entities.DirectorioEntity;
 import org.example.shared.entities.UserEntity;
 
 import javax.swing.*;
@@ -12,9 +13,9 @@ import java.awt.*;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.*;
 import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.stream.Collectors;
 
 public class UserView extends JFrame {
     private JMenuBar menuBar;
@@ -22,7 +23,7 @@ public class UserView extends JFrame {
     private JTree directoryTree;
     private FileClient fileClient;
     private UserEntity actualUser;
-    private List<String> filePaths; // Variable para almacenar las rutas de archivos
+    private List<DirectorioEntity> directorios; // Lista de entidades de directorios
     private String selectedFolderPath; // Variable global para almacenar la carpeta seleccionada
     private JPanel fileDetailPanel; // Panel para mostrar detalles del archivo
 
@@ -30,8 +31,8 @@ public class UserView extends JFrame {
         this.fileClient = fileClient;
         this.actualUser = actualUser;
 
-        // Inicializar las rutas de archivos
-        initializeFilePaths();
+        // Inicializar las entidades de directorios
+        initializeDirectorios();
 
         // Configuración de la ventana principal
         this.setTitle("Document Management System");
@@ -55,8 +56,8 @@ public class UserView extends JFrame {
         searchPanel.add(new JLabel("Search: "), BorderLayout.WEST);
         searchPanel.add(searchBar, BorderLayout.CENTER);
 
-        // Crear el árbol de directorios dinámicamente a partir de las rutas
-        DefaultMutableTreeNode root = createDirectoryTree(filePaths);
+        // Crear el árbol de directorios dinámicamente a partir de las entidades de directorios
+        DefaultMutableTreeNode root = createDirectoryTree(directorios);
         directoryTree = new JTree(root);
         JScrollPane treeScrollPane = new JScrollPane(directoryTree);
 
@@ -74,15 +75,14 @@ public class UserView extends JFrame {
             public void valueChanged(TreeSelectionEvent e) {
                 DefaultMutableTreeNode selectedNode = (DefaultMutableTreeNode) directoryTree.getLastSelectedPathComponent();
                 if (selectedNode != null) {
-                    // Obtener la ruta completa del nodo seleccionado
-                    selectedFolderPath = getFullPath(selectedNode);
-                    System.out.println("Carpeta seleccionada: " + selectedFolderPath);
+                    // Obtener el nombre del archivo o directorio seleccionado
+                    String nodeName = selectedNode.toString();
 
-                    // Actualizar el panel de detalles del archivo si es un archivo
                     if (selectedNode.isLeaf()) {
-                        String fileName = selectedNode.toString();
-                        showFileDetails(fileName);
+                        // Si es un archivo, mostrar los detalles del archivo
+                        showFileDetails(nodeName);
                     } else {
+                        // Si es un directorio, limpiar los detalles del archivo
                         fileDetailPanel.removeAll();
                         fileDetailPanel.add(new JLabel("Selecciona un archivo para ver detalles."));
                     }
@@ -111,24 +111,29 @@ public class UserView extends JFrame {
         return fileData;
     }
 
-    // Método para construir el árbol de directorios a partir de las rutas de archivo
-    private DefaultMutableTreeNode createDirectoryTree(List<String> filePaths) {
+    // Método para construir el árbol de directorios a partir de las entidades de directorios
+    private DefaultMutableTreeNode createDirectoryTree(List<DirectorioEntity> directorios) {
         DefaultMutableTreeNode root = new DefaultMutableTreeNode("Empresa");
         Map<String, DefaultMutableTreeNode> nodeMap = new TreeMap<>();
 
-        for (String path : filePaths) {
-            // Reemplazar barras invertidas por barras normales
-            path = path.replace("\\", "/");
-
+        for (DirectorioEntity dirEntity : directorios) {
+            String path = dirEntity.getDirRuta().replace("\\", "/"); // Obtener la ruta desde la entidad
             String[] parts = path.split("/");
-            DefaultMutableTreeNode currentNode = root;
 
+            DefaultMutableTreeNode currentNode = root;
             String currentPath = "";
+
             for (String part : parts) {
+                // Si la parte es un archivo que termina en ".keep", lo ignoramos
+                if (part.endsWith(".")) {
+                    continue;
+                }
+
                 currentPath += "/" + part;
 
                 // Si el nodo para el directorio actual no existe, se crea
                 if (!nodeMap.containsKey(currentPath)) {
+                    // Solo usar el nombre del directorio para el nodo
                     DefaultMutableTreeNode newNode = new DefaultMutableTreeNode(part);
                     currentNode.add(newNode);
                     nodeMap.put(currentPath, newNode);
@@ -140,40 +145,41 @@ public class UserView extends JFrame {
         return root;
     }
 
-    private void initializeFilePaths() {
-        // Obtener la lista de archivos usando el método getFilesByUser
-        this.filePaths = getFilesByUser(actualUser.getId());
-    }
-
-    public List<String> getFilesByUser(String userId) {
+    // Inicializar los directorios con las entidades
+    private void initializeDirectorios() {
         try {
-            return fileClient.getFilesByUser(userId);
+            // Obtener las listas de DirectorioEntity
+            List<DirectorioEntity> filesByUser = fileClient.getFilesByUser(actualUser.getId());
+            List<DirectorioEntity> userFiles = fileClient.getUserFiles(actualUser.getId());
+
+            // Combinar las dos listas, asegurando evitar duplicados
+            Set<DirectorioEntity> combinedFiles = new HashSet<>(filesByUser);
+            combinedFiles.addAll(userFiles);
+
+            // Asignar la lista combinada a la variable
+            this.directorios = new ArrayList<>(combinedFiles);
+            System.out.println(directorios);
         } catch (Exception e) {
             e.printStackTrace();
-            return null;
         }
     }
 
     // Método para obtener la ruta completa de un nodo seleccionado en el árbol
     private String getFullPath(DefaultMutableTreeNode node) {
-        StringBuilder path = new StringBuilder(node.toString());
-        DefaultMutableTreeNode parentNode = (DefaultMutableTreeNode) node.getParent();
-        while (parentNode != null) {
-            path.insert(0, parentNode.toString() + "/");
-            parentNode = (DefaultMutableTreeNode) parentNode.getParent();
-        }
-        return path.toString();
+        DirectorioEntity entity = (DirectorioEntity) node.getUserObject();
+        return entity.getDirRuta(); // Obtener la ruta desde la entidad
     }
 
+    // Método para mostrar detalles del archivo (icono y nombre) en el panel
     // Método para mostrar detalles del archivo (icono y nombre) en el panel
     private void showFileDetails(String fileName) {
         fileDetailPanel.removeAll();
 
-        // Aquí puedes agregar el icono del archivo. Usamos un icono genérico por ahora.
+        // Mostrar solo el nombre del archivo
         JLabel fileNameLabel = new JLabel("Nombre del archivo: " + fileName);
         fileDetailPanel.add(fileNameLabel);
 
-        // Puedes agregar más detalles aquí, como el icono del archivo
+        // Mostrar un icono genérico de archivo
         ImageIcon fileIcon = (ImageIcon) UIManager.getIcon("FileView.fileIcon");
         JLabel iconLabel = new JLabel(fileIcon);
         fileDetailPanel.add(iconLabel);
@@ -182,4 +188,5 @@ public class UserView extends JFrame {
         fileDetailPanel.revalidate();
         fileDetailPanel.repaint();
     }
+
 }

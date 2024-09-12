@@ -2,6 +2,7 @@ package org.example.Service;
 
 import org.example.shared.RMIInterfaces.AuthService;
 import org.example.shared.RMIInterfaces.FileService;
+import org.example.shared.entities.DirectorioEntity;
 
 import java.io.IOException;
 import java.rmi.Naming;
@@ -25,8 +26,10 @@ public class FileServiceClient {
          service.uploadFile(filename, fileData);
     }
 
-    public List<String> getFilesByUser(String userId) throws RemoteException, SQLException{
+    public List<DirectorioEntity> getFilesByUser(String userId) throws RemoteException, SQLException{
         return service.getFilesByUser(userId);
     }
-
+    public List<DirectorioEntity> getUsersFiles(String userId) throws RemoteException, SQLException{
+        return service.getUsersFiles(userId);
+    }
 }
