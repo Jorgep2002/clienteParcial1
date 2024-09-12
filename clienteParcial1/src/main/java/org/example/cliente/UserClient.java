@@ -60,9 +60,9 @@ public class UserClient {
             return false;
         }
     }
-    public boolean createGroup(String groupName, String groupDescription) {
+    public boolean createGroup(String groupName, String groupDescription, UserEntity user) {
         try {
-            return serviceClient.createGroup(groupName, groupDescription);
+            return serviceClient.createGroup(groupName, groupDescription, user);
         } catch (RemoteException e) {
             e.printStackTrace();
             return false;

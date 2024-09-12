@@ -1,6 +1,7 @@
 package org.example.views;
 
 import org.example.cliente.FileClient;
+import org.example.shared.entities.UserEntity;
 
 import javax.swing.*;
 import javax.swing.tree.DefaultMutableTreeNode;
@@ -16,9 +17,10 @@ public class UserView extends JFrame {
     private JTextField searchBar;
     private JTree directoryTree;
     private FileClient fileClient;
-
-    public UserView(FileClient fileClient) {
+    private UserEntity actualUser;
+    public UserView(FileClient fileClient, UserEntity actualUser ) {
         this.fileClient = fileClient;
+        this.actualUser = actualUser;
 
         // Configuración de la ventana principal
         this.setTitle("Document Management System");

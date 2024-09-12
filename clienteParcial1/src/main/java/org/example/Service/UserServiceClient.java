@@ -26,9 +26,8 @@ public class UserServiceClient {
         return service.login(user);
     }
 
-    public boolean createGroup(String groupName, String groupDescription) throws RemoteException {
-        GroupEntity group = new GroupEntity(groupName, groupDescription);
-        return service.createGroup(group);
+    public boolean createGroup(String groupName, String groupDescription, UserEntity user) throws RemoteException {
+        return service.createGroup(groupName, groupDescription, user);
     }
 
     public List<GroupEntity> getAllGroups() throws RemoteException {

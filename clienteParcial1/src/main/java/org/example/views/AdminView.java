@@ -23,14 +23,16 @@ public class AdminView extends JFrame {
     private JTree directoryTree;
     private JPanel mainPanel; // Panel principal
     private JPanel rightPanel; // Panel derecho donde mostraremos los grupos
-
+    private UserEntity actualUser
+            ;
 
     private FileClient fileClient;
     private UserClient userClient;
 
-    public AdminView(UserClient userClient, FileClient fileClient) {
+    public AdminView(UserClient userClient, FileClient fileClient, UserEntity actualUser) {
         this.fileClient = fileClient;
         this.userClient = userClient;
+        this.actualUser = actualUser;
 
         // Configuración de la ventana principal
         this.setTitle("Admin Document Management System");
@@ -401,13 +403,12 @@ public class AdminView extends JFrame {
 
                 if (!groupName.isEmpty() && !groupDesc.isEmpty()) {
                     // Crear instancia de GroupEntity
-                    GroupEntity group = new GroupEntity();
-                    group.setName(groupName);
-                    group.setDescription(groupDesc);
+
 
                     // Aquí puedes manejar la creación del grupo o enviarlo a un servicio para guardarlo
-                    userClient.createGroup(groupName,groupDesc);
-                    JOptionPane.showMessageDialog(groupDialog, "Grupo '" + group.getName() + "' creado con éxito.");
+                    userClient.createGroup(groupName,groupDesc, actualUser);
+
+                    JOptionPane.showMessageDialog(groupDialog, "Grupo '" + groupName + "' creado con éxito.");
                     groupDialog.dispose();
                 } else {
                     JOptionPane.showMessageDialog(groupDialog, "Todos los campos son obligatorios.");
