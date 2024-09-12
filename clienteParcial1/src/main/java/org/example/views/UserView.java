@@ -4,6 +4,8 @@ import org.example.cliente.FileClient;
 import org.example.shared.entities.UserEntity;
 
 import javax.swing.*;
+import javax.swing.event.TreeSelectionEvent;
+import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 import java.awt.*;
@@ -21,6 +23,7 @@ public class UserView extends JFrame {
     private FileClient fileClient;
     private UserEntity actualUser;
     private List<String> filePaths; // Variable para almacenar las rutas de archivos
+    private String selectedFolderPath; // Variable global para almacenar la carpeta seleccionada
 
     public UserView(FileClient fileClient, UserEntity actualUser) {
         this.fileClient = fileClient;
@@ -55,6 +58,20 @@ public class UserView extends JFrame {
         DefaultMutableTreeNode root = createDirectoryTree(filePaths);
         directoryTree = new JTree(root);
         JScrollPane treeScrollPane = new JScrollPane(directoryTree);
+
+        // Añadir listener para capturar la selección de nodos en el árbol
+        directoryTree.addTreeSelectionListener(new TreeSelectionListener() {
+            @Override
+            public void valueChanged(TreeSelectionEvent e) {
+                DefaultMutableTreeNode selectedNode = (DefaultMutableTreeNode) directoryTree.getLastSelectedPathComponent();
+                if (selectedNode != null) {
+                    // Obtener la ruta completa del nodo seleccionado
+                    selectedFolderPath = getFullPath(selectedNode);
+                    // Mostrar la carpeta seleccionada en la consola
+                    System.out.println("Carpeta seleccionada: " + selectedFolderPath);
+                }
+            }
+        });
 
         // Añadir componentes al panel principal
         mainPanel.add(searchPanel, BorderLayout.NORTH);
@@ -117,5 +134,16 @@ public class UserView extends JFrame {
             e.printStackTrace();
             return null;
         }
+    }
+
+    // Método para obtener la ruta completa de un nodo seleccionado en el árbol
+    private String getFullPath(DefaultMutableTreeNode node) {
+        StringBuilder path = new StringBuilder(node.toString());
+        DefaultMutableTreeNode parentNode = (DefaultMutableTreeNode) node.getParent();
+        while (parentNode != null) {
+            path.insert(0, parentNode.toString() + "/");
+            parentNode = (DefaultMutableTreeNode) parentNode.getParent();
+        }
+        return path.toString();
     }
 }
