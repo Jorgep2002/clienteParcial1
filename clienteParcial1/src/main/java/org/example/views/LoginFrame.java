@@ -10,6 +10,8 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.util.Arrays;
+import java.util.List;
 
 public class LoginFrame extends JFrame {
     private JTextField usernameField;
@@ -93,6 +95,7 @@ public class LoginFrame extends JFrame {
                 AdminView  adminFrame = new AdminView(client,fileClient, user);
                     adminFrame.setVisible(true);
                 }else if(!user.getId().equals("admin")){
+
                 UserView  userFrame = new UserView(fileClient, user);
                     userFrame.setVisible(true);
                 }

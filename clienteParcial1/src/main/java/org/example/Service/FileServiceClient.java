@@ -6,6 +6,7 @@ import org.example.shared.RMIInterfaces.FileService;
 import java.io.IOException;
 import java.rmi.Naming;
 import java.rmi.RemoteException;
+import java.sql.SQLException;
 import java.util.List;
 
 public class FileServiceClient {
@@ -20,8 +21,12 @@ public class FileServiceClient {
         }
     }
 
-    // Método para autenticar un usuario
     public  void uploadFile(String filename, byte[] fileData) throws RemoteException, IOException {
          service.uploadFile(filename, fileData);
     }
+
+    public List<String> getFilesByUser(String userId) throws RemoteException, SQLException{
+        return service.getFilesByUser(userId);
+    }
+
 }

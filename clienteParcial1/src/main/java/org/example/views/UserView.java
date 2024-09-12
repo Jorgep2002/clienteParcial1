@@ -5,12 +5,14 @@ import org.example.shared.entities.UserEntity;
 
 import javax.swing.*;
 import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.DefaultTreeModel;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 public class UserView extends JFrame {
     private JMenuBar menuBar;
@@ -18,9 +20,14 @@ public class UserView extends JFrame {
     private JTree directoryTree;
     private FileClient fileClient;
     private UserEntity actualUser;
-    public UserView(FileClient fileClient, UserEntity actualUser ) {
+    private List<String> filePaths; // Variable para almacenar las rutas de archivos
+
+    public UserView(FileClient fileClient, UserEntity actualUser) {
         this.fileClient = fileClient;
         this.actualUser = actualUser;
+
+        // Inicializar las rutas de archivos
+        initializeFilePaths();
 
         // Configuración de la ventana principal
         this.setTitle("Document Management System");
@@ -44,26 +51,8 @@ public class UserView extends JFrame {
         searchPanel.add(new JLabel("Search: "), BorderLayout.WEST);
         searchPanel.add(searchBar, BorderLayout.CENTER);
 
-        // Crear el árbol de directorios con nodos predeterminados
-        DefaultMutableTreeNode root = new DefaultMutableTreeNode("Root");
-        DefaultMutableTreeNode folder1 = new DefaultMutableTreeNode("Folder 1");
-        DefaultMutableTreeNode folder2 = new DefaultMutableTreeNode("Folder 2");
-
-        // Agregar archivos dentro de las carpetas
-        DefaultMutableTreeNode file1 = new DefaultMutableTreeNode("File 1.txt");
-        DefaultMutableTreeNode file2 = new DefaultMutableTreeNode("File 2.docx");
-        DefaultMutableTreeNode file3 = new DefaultMutableTreeNode("File 3.pdf");
-
-        // Añadir los archivos a las carpetas
-        folder1.add(file1);
-        folder1.add(file2);
-        folder2.add(file3);
-
-        // Añadir carpetas al nodo raíz
-        root.add(folder1);
-        root.add(folder2);
-
-        // Crear el árbol de directorios
+        // Crear el árbol de directorios dinámicamente a partir de las rutas
+        DefaultMutableTreeNode root = createDirectoryTree(filePaths);
         directoryTree = new JTree(root);
         JScrollPane treeScrollPane = new JScrollPane(directoryTree);
 
@@ -73,30 +62,6 @@ public class UserView extends JFrame {
 
         // Añadir el panel principal a la ventana
         this.add(mainPanel);
-
-        // Añadir listener al menú "Upload File"
-        uploadMenuItem.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                JFileChooser fileChooser = new JFileChooser();
-                int returnValue = fileChooser.showOpenDialog(null);
-
-                if (returnValue == JFileChooser.APPROVE_OPTION) {
-                    File file = fileChooser.getSelectedFile();
-                    try {
-                        // Convertir el archivo a un array de bytes
-                        byte[] fileData = convertFileToBytes(file);
-
-                        // Subir el archivo mediante el cliente remoto
-                        fileClient.uploadFile(file.getName(), fileData);
-
-                        JOptionPane.showMessageDialog(UserView.this, "File uploaded successfully!");
-                    } catch (IOException ex) {
-                        JOptionPane.showMessageDialog(UserView.this, "Failed to upload file: " + ex.getMessage());
-                    }
-                }
-            }
-        });
 
         // Hacer visible la ventana
         this.setVisible(true);
@@ -109,5 +74,48 @@ public class UserView extends JFrame {
         fileInputStream.read(fileData);
         fileInputStream.close();
         return fileData;
+    }
+
+    // Método para construir el árbol de directorios a partir de las rutas de archivo
+    private DefaultMutableTreeNode createDirectoryTree(List<String> filePaths) {
+        DefaultMutableTreeNode root = new DefaultMutableTreeNode("Empresa");
+        Map<String, DefaultMutableTreeNode> nodeMap = new TreeMap<>();
+
+        for (String path : filePaths) {
+            // Reemplazar barras invertidas por barras normales
+            path = path.replace("\\", "/");
+
+            String[] parts = path.split("/");
+            DefaultMutableTreeNode currentNode = root;
+
+            String currentPath = "";
+            for (String part : parts) {
+                currentPath += "/" + part;
+
+                // Si el nodo para el directorio actual no existe, se crea
+                if (!nodeMap.containsKey(currentPath)) {
+                    DefaultMutableTreeNode newNode = new DefaultMutableTreeNode(part);
+                    currentNode.add(newNode);
+                    nodeMap.put(currentPath, newNode);
+                }
+                currentNode = nodeMap.get(currentPath);
+            }
+        }
+
+        return root;
+    }
+
+    private void initializeFilePaths() {
+        // Obtener la lista de archivos usando el método getFilesByUser
+        this.filePaths = getFilesByUser(actualUser.getId());
+    }
+
+    public List<String> getFilesByUser(String userId) {
+        try {
+            return fileClient.getFilesByUser(userId);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 }

@@ -6,6 +6,7 @@ import org.example.shared.entities.UserEntity;
 
 import java.io.IOException;
 import java.rmi.RemoteException;
+import java.sql.SQLException;
 import java.util.List;
 
 public class FileClient {
@@ -21,5 +22,12 @@ public class FileClient {
     }
 
 
-
+    public List<String> getFilesByUser(String userId) {
+        try{
+            return serviceClient.getFilesByUser(userId);
+        }catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
 }
