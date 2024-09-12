@@ -2,19 +2,22 @@ package org.example.views;
 
 import org.example.cliente.FileClient;
 import org.example.cliente.UserClient;
+import org.example.shared.entities.DirectorioEntity;
 import org.example.shared.entities.GroupEntity;
 import org.example.shared.entities.UserEntity;
 
-import java.util.List;
+import java.util.*;
 
 import javax.swing.*;
 import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.DefaultTreeModel;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.List;
 
 
 public class AdminView extends JFrame {
@@ -23,8 +26,8 @@ public class AdminView extends JFrame {
     private JTree directoryTree;
     private JPanel mainPanel; // Panel principal
     private JPanel rightPanel; // Panel derecho donde mostraremos los grupos
-    private UserEntity actualUser
-            ;
+    private UserEntity actualUser;
+    private List<DirectorioEntity> directorios; // Lista de entidades de directorios
 
     private FileClient fileClient;
     private UserClient userClient;
@@ -33,7 +36,7 @@ public class AdminView extends JFrame {
         this.fileClient = fileClient;
         this.userClient = userClient;
         this.actualUser = actualUser;
-
+        initializeDirectorios();
         // Configuración de la ventana principal
         this.setTitle("Admin Document Management System");
         this.setSize(800, 600);
@@ -82,21 +85,8 @@ public class AdminView extends JFrame {
         searchPanel.add(searchBar, BorderLayout.CENTER);
 
         // Crear el árbol de directorios con nodos predeterminados
-        DefaultMutableTreeNode root = new DefaultMutableTreeNode("Root");
-        DefaultMutableTreeNode folder1 = new DefaultMutableTreeNode("Folder 1");
-        DefaultMutableTreeNode folder2 = new DefaultMutableTreeNode("Folder 2");
 
-        DefaultMutableTreeNode file1 = new DefaultMutableTreeNode("File 1.txt");
-        DefaultMutableTreeNode file2 = new DefaultMutableTreeNode("File 2.docx");
-        DefaultMutableTreeNode file3 = new DefaultMutableTreeNode("File 3.pdf");
-
-        folder1.add(file1);
-        folder1.add(file2);
-        folder2.add(file3);
-
-        root.add(folder1);
-        root.add(folder2);
-
+        DefaultMutableTreeNode root = createDirectoryTree(directorios);
         directoryTree = new JTree(root);
         JScrollPane treeScrollPane = new JScrollPane(directoryTree);
 
@@ -124,7 +114,7 @@ public class AdminView extends JFrame {
                     File file = fileChooser.getSelectedFile();
                     try {
                         byte[] fileData = convertFileToBytes(file);
-                        fileClient.uploadFile(file.getName(), fileData);
+//                        fileClient.uploadFile(file.getName(), fileData);
                         JOptionPane.showMessageDialog(AdminView.this, "File uploaded successfully!");
                     } catch (Exception ex) {
                         JOptionPane.showMessageDialog(AdminView.this, "Failed to upload file: " + ex.getMessage());
@@ -167,6 +157,8 @@ public class AdminView extends JFrame {
                 openCreateUserDialog();
             }
         });
+
+
 
 
 
@@ -427,7 +419,81 @@ public class AdminView extends JFrame {
         groupDialog.setLocationRelativeTo(this);
         groupDialog.setVisible(true);
     }
+    // Inicializar los directorios con las entidades
+    private void initializeDirectorios() {
+        try {
+            // Limpiar la lista de directorios si ya existe
+            if (this.directorios != null) {
+                this.directorios.clear();
+            }
 
+            // Obtener la lista completa de DirectorioEntity
+            List<DirectorioEntity> allFiles = fileClient.getAllFiles();
+
+            // Asignar la lista a la variable de directorios
+            this.directorios = new ArrayList<>(allFiles);
+            System.out.println(directorios);
+
+            // Si la lista de directorios está vacía, mostrar un mensaje y continuar
+            if (this.directorios.isEmpty()) {
+                System.out.println("La lista de directorios está vacía, pero se continuará cargando la ventana.");
+            }
+
+            // Limpiar y actualizar el árbol de directorios
+            updateDirectoryTree();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    // Método para limpiar y actualizar el árbol de directorios
+    private void updateDirectoryTree() {
+        // Crear el nuevo modelo de árbol con los directorios actualizados
+        DefaultMutableTreeNode root = createDirectoryTree(directorios);
+
+        // Obtener el modelo actual del árbol
+        DefaultTreeModel treeModel = (DefaultTreeModel) directoryTree.getModel();
+
+        // Actualizar el modelo con el nuevo árbol
+        treeModel.setRoot(root);
+
+        // Recargar el modelo para que los cambios se reflejen en el JTree
+        treeModel.reload();
+    }
+    // Método para construir el árbol de directorios a partir de las entidades de directorios
+    private DefaultMutableTreeNode createDirectoryTree(List<DirectorioEntity> directorios) {
+        DefaultMutableTreeNode root = new DefaultMutableTreeNode("Empresa");
+        Map<String, DefaultMutableTreeNode> nodeMap = new TreeMap<>();
+
+        for (DirectorioEntity dirEntity : directorios) {
+            String path = dirEntity.getDirRuta(); // Obtener la ruta desde la entidad
+            String[] parts = path.split("/");
+
+            DefaultMutableTreeNode currentNode = root;
+            String currentPath = "";
+
+            for (String part : parts) {
+                // Si la parte es un archivo que termina en ".keep", lo ignoramos
+                if (part.endsWith(".")) {
+                    continue;
+                }
+
+                currentPath += "/" + part;
+
+                // Si el nodo para el directorio actual no existe, se crea
+                if (!nodeMap.containsKey(currentPath)) {
+                    // Solo usar el nombre del directorio para el nodo
+                    DefaultMutableTreeNode newNode = new DefaultMutableTreeNode(part);
+                    currentNode.add(newNode);
+                    nodeMap.put(currentPath, newNode);
+                }
+                currentNode = nodeMap.get(currentPath);
+            }
+        }
+
+        return root;
+    }
     private byte[] convertFileToBytes(File file) throws IOException {
         FileInputStream fileInputStream = new FileInputStream(file);
         byte[] fileData = new byte[(int) file.length()];
@@ -435,4 +501,5 @@ public class AdminView extends JFrame {
         fileInputStream.close();
         return fileData;
     }
+
 }

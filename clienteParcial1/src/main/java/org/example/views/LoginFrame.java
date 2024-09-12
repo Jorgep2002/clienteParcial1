@@ -96,7 +96,7 @@ public class LoginFrame extends JFrame {
                     adminFrame.setVisible(true);
                 }else if(!user.getId().equals("admin")){
 
-                UserView  userFrame = new UserView(fileClient, user);
+                UserView  userFrame = new UserView(client,fileClient, user);
                     userFrame.setVisible(true);
                 }
 

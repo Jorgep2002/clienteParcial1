@@ -22,8 +22,8 @@ public class FileServiceClient {
         }
     }
 
-    public  void uploadFile(String filename, byte[] fileData) throws RemoteException, IOException {
-         service.uploadFile(filename, fileData);
+    public void uploadFileToUser(String filename, byte[] fileData, String ownerId, String directorio) throws RemoteException, IOException {
+         service.uploadFileToUser(filename,  fileData, ownerId,  directorio);
     }
 
     public List<DirectorioEntity> getFilesByUser(String userId) throws RemoteException, SQLException{
@@ -31,5 +31,12 @@ public class FileServiceClient {
     }
     public List<DirectorioEntity> getUsersFiles(String userId) throws RemoteException, SQLException{
         return service.getUsersFiles(userId);
+    }
+
+    public List<DirectorioEntity> getAllfiles() throws RemoteException, SQLException{
+        return service.getALLFiles();
+    }
+    public List<DirectorioEntity> searchDirectories(String query) throws RemoteException, SQLException{
+        return service.searchDirectories(query);
     }
 }

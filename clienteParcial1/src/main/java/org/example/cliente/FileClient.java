@@ -17,9 +17,8 @@ public class FileClient {
         this.serviceClient = new FileServiceClient(ip, port, serviceName);
     }
 
-    public  void uploadFile(String filename, byte[] fileData) throws RemoteException, IOException {
-
-            serviceClient.uploadFile(filename, fileData);
+    public void uploadFileToUser(String filename, byte[] fileData, String ownerId, String  directorio) throws IOException {
+        this.serviceClient.uploadFileToUser(filename,  fileData, ownerId,  directorio);
     }
 
 
@@ -34,6 +33,23 @@ public class FileClient {
     public List<DirectorioEntity> getUserFiles(String userId) {
         try{
             return serviceClient.getUsersFiles(userId);
+        }catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+    public List<DirectorioEntity> getAllFiles() {
+        try{
+            return serviceClient.getAllfiles();
+        }catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    public List<DirectorioEntity> searchDirectories(String query) {
+        try{
+            return serviceClient.searchDirectories(query);
         }catch (Exception e) {
             e.printStackTrace();
             return null;
