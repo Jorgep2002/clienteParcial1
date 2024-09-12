@@ -24,6 +24,7 @@ public class UserView extends JFrame {
     private UserEntity actualUser;
     private List<String> filePaths; // Variable para almacenar las rutas de archivos
     private String selectedFolderPath; // Variable global para almacenar la carpeta seleccionada
+    private JPanel fileDetailPanel; // Panel para mostrar detalles del archivo
 
     public UserView(FileClient fileClient, UserEntity actualUser) {
         this.fileClient = fileClient;
@@ -59,6 +60,14 @@ public class UserView extends JFrame {
         directoryTree = new JTree(root);
         JScrollPane treeScrollPane = new JScrollPane(directoryTree);
 
+        // Ajustar el ancho del JScrollPane que contiene el JTree
+        treeScrollPane.setPreferredSize(new Dimension(300, getHeight())); // Ajusta el ancho aquí
+
+        // Crear el panel para mostrar detalles del archivo
+        fileDetailPanel = new JPanel();
+        fileDetailPanel.setLayout(new BoxLayout(fileDetailPanel, BoxLayout.Y_AXIS));
+        JScrollPane detailScrollPane = new JScrollPane(fileDetailPanel);
+
         // Añadir listener para capturar la selección de nodos en el árbol
         directoryTree.addTreeSelectionListener(new TreeSelectionListener() {
             @Override
@@ -67,8 +76,16 @@ public class UserView extends JFrame {
                 if (selectedNode != null) {
                     // Obtener la ruta completa del nodo seleccionado
                     selectedFolderPath = getFullPath(selectedNode);
-                    // Mostrar la carpeta seleccionada en la consola
                     System.out.println("Carpeta seleccionada: " + selectedFolderPath);
+
+                    // Actualizar el panel de detalles del archivo si es un archivo
+                    if (selectedNode.isLeaf()) {
+                        String fileName = selectedNode.toString();
+                        showFileDetails(fileName);
+                    } else {
+                        fileDetailPanel.removeAll();
+                        fileDetailPanel.add(new JLabel("Selecciona un archivo para ver detalles."));
+                    }
                 }
             }
         });
@@ -76,6 +93,7 @@ public class UserView extends JFrame {
         // Añadir componentes al panel principal
         mainPanel.add(searchPanel, BorderLayout.NORTH);
         mainPanel.add(treeScrollPane, BorderLayout.WEST);
+        mainPanel.add(detailScrollPane, BorderLayout.CENTER);
 
         // Añadir el panel principal a la ventana
         this.add(mainPanel);
@@ -145,5 +163,23 @@ public class UserView extends JFrame {
             parentNode = (DefaultMutableTreeNode) parentNode.getParent();
         }
         return path.toString();
+    }
+
+    // Método para mostrar detalles del archivo (icono y nombre) en el panel
+    private void showFileDetails(String fileName) {
+        fileDetailPanel.removeAll();
+
+        // Aquí puedes agregar el icono del archivo. Usamos un icono genérico por ahora.
+        JLabel fileNameLabel = new JLabel("Nombre del archivo: " + fileName);
+        fileDetailPanel.add(fileNameLabel);
+
+        // Puedes agregar más detalles aquí, como el icono del archivo
+        ImageIcon fileIcon = (ImageIcon) UIManager.getIcon("FileView.fileIcon");
+        JLabel iconLabel = new JLabel(fileIcon);
+        fileDetailPanel.add(iconLabel);
+
+        // Actualizar la vista del panel
+        fileDetailPanel.revalidate();
+        fileDetailPanel.repaint();
     }
 }
